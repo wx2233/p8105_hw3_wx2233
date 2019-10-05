@@ -220,7 +220,7 @@ ext_avg_data_value %>%
 
 
 ```
-The average data_value fluctuate by years for each state.
+The average data value fluctuates by years for each state.
 
 
 ### c) Make a two-panel plot showing, for the years 2006, and 2010, distribution of data_value for responses (“Poor” to “Excellent”) among locations in NY State.
