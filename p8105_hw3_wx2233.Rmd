@@ -1,0 +1,320 @@
+---
+title: "p8105_hw3_wx2233"
+author: "Weijia Xiong"
+date: "10/3/2019"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(p8105.datasets)
+
+knitr::opts_chunk$set(
+	echo = TRUE,
+	warning = FALSE,
+	fig.width = 10, 
+  fig.height = 8,
+  out.width = "90%"
+)
+
+options(
+  ggplot2.continuous.colour = "viridis",
+  ggplot2.continuous.fill = "viridis"
+)
+scale_colour_discrete = scale_colour_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
+theme_set(theme_minimal() + 
+            theme(legend.position = "bottom", 
+                  title = element_text(size = 20),
+                  axis.title = element_text(size = 15)
+                  )
+)
+```
+
+## Problem 1 
+```{r}
+data("instacart")
+```
+
+
+The data has 1384617 obs. of  15 variables:
+
+* order_id: the id of order 
+* user_id: the id of customer 
+* eval_set: which evaluation set this order belongs in (see SET described below)
+* order_number: the order sequence number for this user (1 = first, n = nth)
+* order_dow: the day of the week the order was placed on
+* order_hour_of_day: the hour of the day the order was placed on
+* days_since_prior: days since the last order, capped at 30 (NAs for order_number = 1)
+* product_id: the id of product
+* product_name: name of the product
+* aisle_id: the id of aisle
+* aisle: the name of the aisle
+* department_id: department identifier
+* department: the name of the department
+* add_to_cart_order: order in which each product was added to cart
+* reordered: whether this product has been ordered by this user in the past(1 = yes, 0 = no)
+
+
+
+### a) How many aisles are there, and which aisles are the most items ordered from?
+```{r}
+aisles_data = instacart %>%
+  group_by(aisle) %>%
+  summarize(count = n()) %>% 
+  arrange(desc(count))
+aisles_data
+number_of_aisles = nrow(aisles_data)
+```
+There are 134 aisles. Fresh vegetables are the most items orderd from.
+
+### b) Make a plot that shows the number of items ordered in each aisle, limiting this to aisles with more than 10000 items ordered. Arrange aisles sensibly, and organize your plot so others can read it.
+
+```{r}
+
+aisles_data %>%  
+  filter(count >= 10000) %>%  #more than 10000 items ordered
+  ggplot(aes(x = reorder(aisle,desc(count)), y = count, fill = count)) +  
+  geom_col() +
+  labs(
+    title = "The Number of Items ordered in Each Aisle",
+    y = "The number of Item Orders",
+    x = 'Aisles') +
+  theme(
+    axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
+
+```
+
+The plot shows the number of items ordered in each aisle. From this plot we can also see that fresh vegetables is the aisle which has most items ordered.
+
+### c) Make a table showing the three most popular items in each of the aisles “baking ingredients”, “dog food care”, and “packaged vegetables fruits”. Include the number of times each item is ordered in your table.
+
+```{r}
+bake = instacart %>% 
+  filter(aisle == c("baking ingredients")) %>% 
+  group_by(aisle, product_name) %>% 
+  summarize(
+    count = n()
+  ) %>%
+  arrange(desc(count)) 
+bake = bake[1:3,]
+
+dog = instacart %>% 
+  filter(aisle == c("dog food care")) %>% 
+  group_by(aisle, product_name) %>% 
+  summarize(
+    count = n()
+  ) %>%
+  arrange(desc(count)) 
+dog = dog[1:3,]
+
+veg_fruit = instacart %>% 
+  filter(aisle == c("packaged vegetables fruits")) %>% 
+  group_by(aisle, product_name) %>% 
+  summarize(
+    count = n()
+  ) %>%
+  arrange(desc(count)) 
+veg_fruit = veg_fruit[1:3,]
+
+bind_rows(bake,dog,veg_fruit) %>% 
+  knitr::kable()
+```
+
+The most popular item of baking ingredients	is Light Brown Sugar, which has bought 499 times. The most popular item from dog food care is	Snack Sticks Chicken & Rice Recipe Dog Treats, which has bought 30 times. And the most popular item from packaged vegetables fruits is	Organic Baby Spinach, which has bought 9784 times.
+
+### d) Make a table showing the mean hour of the day at which Pink Lady Apples and Coffee Ice Cream are ordered on each day of the week; format this table for human readers (i.e. produce a 2 x 7 table)
+
+```{r}
+instacart %>% 
+  filter(product_name %in% c("Pink Lady Apple", "Coffee Ice Cream")) %>%
+  group_by(product_name,order_dow) %>% 
+  summarize(
+    mean_hour = mean(order_hour_of_day)
+  ) %>% 
+  pivot_wider(
+    names_from = order_dow,
+    values_from = mean_hour
+  ) %>% 
+  knitr::kable()
+
+
+```
+
+From this table we find that the pink lady apple has no order on Saturday(day 6). And people like to order this two products on Tuesday. People don't like to order Coffee Ice Cream on Friday and Pink Lady Apple on Wednesday.
+
+
+
+
+## Problem 2
+
+
+### Tidy data
+```{r}
+data("brfss_smart2010")
+brfss = brfss_smart2010
+
+brfss = brfss %>% 
+  janitor::clean_names() %>% 
+  filter(topic == "Overall Health", response %in% c("Excellent","Very good","Good","Fair","Poor")) %>% 
+  mutate(
+    response = factor(response,levels = c("Poor","Fair","Good","Very good","Excellent"))
+  ) %>% 
+  rename(state = locationabbr)
+
+brfss
+```
+
+### a) In 2002, which states were observed at 7 or more locations? What about in 2010?
+```{r}
+brfss %>% 
+  filter(year == 2002) %>% 
+  group_by(state) %>% 
+  summarize(
+    count = n()
+  ) %>% 
+  filter(count >= 7)
+
+brfss %>% 
+  filter(year == 2010) %>% 
+  group_by(state) %>% 
+  summarize(
+    count = n()
+  ) %>% 
+  filter(count >= 7)
+```
+
+2002: GA,MA,ME,NJ,OH,PA,RI     
+2010: CA,CO,FL,ID,MA,MD,ME,NC,NY,OH,PA,SC,TN,TX,UT
+
+
+### b) Construct a dataset that is limited to Excellent responses, and contains, year, state, and a variable that averages the data_value across locations within a state. Make a “spaghetti” plot of this average value over time within a state (that is, make a plot showing a line for each state across years – the geom_line geometry and group aesthetic will help).
+
+
+```{r}
+ext_avg_data_value = brfss %>% 
+  filter(response == "Excellent") %>% 
+  select(year,state,data_value) %>% 
+  group_by(year,state) %>% 
+  summarize(
+    average_value = mean(data_value,na.rm = TRUE)
+  )
+
+ext_avg_data_value
+```
+
+
+```{r}
+ext_avg_data_value %>% 
+  ggplot(aes(x = year, y = average_value)) +
+  geom_line(aes(group = state,color = state)) +
+  theme(
+    legend.position = "right"
+  ) +
+  labs(
+    y = "Average Value",
+    x = "Year",
+    title = "Average value over time within a state"
+  )
+
+
+```
+The average data_value fluctuate by years for each state.
+
+
+### c) Make a two-panel plot showing, for the years 2006, and 2010, distribution of data_value for responses (“Poor” to “Excellent”) among locations in NY State.
+
+```{r}
+NY_data_value = brfss %>% 
+  filter(year == 2006 | year == 2010,state == "NY") %>% 
+  select(year,state,locationdesc,response,data_value)
+
+NY_data_value %>% 
+ggplot(aes(x = response, y = data_value,fill = locationdesc)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  geom_line(aes(group = locationdesc, color = locationdesc))+
+  labs(
+    title = " Data value of NY"
+  ) +
+  facet_grid(. ~ year)
+```
+Only 6 counties' data are collected in 2006 while 9 counties in 2010. And the Good and Very good response are most common in both two years.
+
+## Problem 3
+
+### a) Load, tidy, and otherwise wrangle the data. Your final dataset should include all originally observed variables and values; have useful variable names; include a weekday vs weekend variable; and encode data with reasonable variable classes. Describe the resulting dataset (e.g. what variables exist, how many observations, etc).
+```{r}
+accel = read_csv("./data/accel_data.csv")%>% 
+  janitor::clean_names() %>% 
+  mutate(
+    weekday_weekend = recode(day,
+                             "Monday" = "weekday",
+                             "Tuesday" = "weekday",
+                             "Wednesday" = "weekday",
+                             "Thursday" = "weekday",
+                             "Friday" = "weekday",
+                             "Saturday" = "weekend",
+                             "Sunday" = "weekend")
+  ) %>% 
+  select(week,weekday_weekend,everything()) %>% 
+  pivot_longer(
+    starts_with("activity_"),
+    names_to = "activity_minute", 
+    names_prefix = "activity_",
+    values_to = "counts") %>% 
+  arrange(day_id)
+
+accel
+```
+
+THe data has 50400 obs. of 6 variables:
+
+* week: which week
+* weekday_weekend: whether weekday or weekend
+* day_id: id of the day (id = 1~35)
+* day: which day of a week
+* activity_minute: the minute of 24-hour day
+* count: the activity counts for each minute of a 24-hour day starting at midnight.
+
+### b) Traditional analyses of accelerometer data focus on the total activity over the day. Using your tidied dataset, aggregate accross minutes to create a total activity variable for each day, and create a table showing these totals. Are any trends apparent?
+
+```{r}
+accel_total = accel %>% 
+  group_by(day_id) %>% 
+  summarize(
+    total = sum(counts,na.rm = TRUE)
+  ) 
+accel_total 
+
+# accel_total %>% 
+#   ggplot(aes(x = day_id, y = total )) +
+#   geom_line() +
+#   scale_x_continuous(breaks = seq(0, 35, 2))
+
+  
+```
+
+The activity counts have upper and lower fluctuation. Decreasing always occurs after increasing on last day. And the activity counts dramaticly decrease on day 24 and 31, both are Saturday.
+
+
+### c) Accelerometer data allows the inspection activity over the course of the day. Make a single-panel plot that shows the 24-hour activity time courses for each day and use color to indicate day of the week. Describe in words any patterns or conclusions you can make based on this graph.
+
+```{r}
+accel %>% 
+  group_by(day_id,day) %>% 
+  summarize(
+    eachday = sum(counts,na.rm = TRUE)
+  ) %>%
+  ggplot(aes(x = day_id, y = eachday, color = day)) +
+  geom_line(size = 1.5) +
+  scale_x_continuous(breaks = seq(0, 35, 5)) +
+  labs(
+    x = "activity for each day",
+    y = "day id",
+    title = "The 24-hour Activity Time Courses for Each Day"
+  )
+```
+
+For first 10 days, the activity counts are increasing except Sunday.
+Then the activity counts decrease from day 11 to around day 25. For Saturday in last two weeks, both activity counts of the day decrease to 1440.
