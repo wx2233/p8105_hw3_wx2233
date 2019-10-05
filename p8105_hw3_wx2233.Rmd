@@ -72,18 +72,17 @@ There are 134 aisles. Fresh vegetables are the most items orderd from.
 ### b) Make a plot that shows the number of items ordered in each aisle, limiting this to aisles with more than 10000 items ordered. Arrange aisles sensibly, and organize your plot so others can read it.
 
 ```{r}
-
 aisles_data %>%  
   filter(count >= 10000) %>%  #more than 10000 items ordered
-  ggplot(aes(x = reorder(aisle,desc(count)), y = count, fill = count)) +  
-  geom_col() +
+  ggplot(aes(x = reorder(aisle,desc(count)), y = count,fill = count)) +  
+  geom_bar(stat = 'identity') +
   labs(
     title = "The Number of Items ordered in Each Aisle",
     y = "The number of Item Orders",
     x = 'Aisles') +
   theme(
     axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
-
+ 
 ```
 
 The plot shows the number of items ordered in each aisle. From this plot we can also see that fresh vegetables is the aisle which has most items ordered.
