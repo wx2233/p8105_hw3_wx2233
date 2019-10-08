@@ -170,6 +170,7 @@ brfss
 brfss %>% 
   filter(year == 2002) %>% 
   group_by(state) %>% 
+  distinct(locationdesc) %>% 
   summarize(
     count = n()
   ) %>% 
@@ -178,14 +179,15 @@ brfss %>%
 brfss %>% 
   filter(year == 2010) %>% 
   group_by(state) %>% 
+  distinct(locationdesc) %>% 
   summarize(
     count = n()
   ) %>% 
   filter(count >= 7)
 ```
 
-2002: GA,MA,ME,NJ,OH,PA,RI     
-2010: CA,CO,FL,ID,MA,MD,ME,NC,NY,OH,PA,SC,TN,TX,UT
+2002: CT,FL,MA,NC,NJ,PA    
+2010: CA,CO,FL,MA,MD,NC,NE,NJ,NY,OH,PA,SC,TX,WA
 
 
 ### b) Construct a dataset that is limited to Excellent responses, and contains, year, state, and a variable that averages the data_value across locations within a state. Make a “spaghetti” plot of this average value over time within a state (that is, make a plot showing a line for each state across years – the geom_line geometry and group aesthetic will help).
@@ -232,7 +234,8 @@ NY_data_value = brfss %>%
 NY_data_value %>% 
 ggplot(aes(x = response, y = data_value,fill = locationdesc)) +
   geom_bar(stat = "identity", position = "dodge") +
-  geom_line(aes(group = locationdesc, color = locationdesc))+
+  geom_line(aes(group = locationdesc, color = locationdesc)) +
+  geom_point(size = 1.5, alpha = 0.5)+
   labs(
     title = " Data value of NY"
   ) +
@@ -244,7 +247,7 @@ Only 6 counties' data are collected in 2006 while 9 counties in 2010. And the Go
 
 ### a) Load, tidy, and otherwise wrangle the data. Your final dataset should include all originally observed variables and values; have useful variable names; include a weekday vs weekend variable; and encode data with reasonable variable classes. Describe the resulting dataset (e.g. what variables exist, how many observations, etc).
 ```{r}
-accel = read_csv("./data/accel_data.csv")%>% 
+accel = read_csv("./data/accel_data.csv") %>% 
   janitor::clean_names() %>% 
   mutate(
     weekday_weekend = recode(day,
@@ -283,15 +286,15 @@ accel_total = accel %>%
   group_by(day_id) %>% 
   summarize(
     total = sum(counts,na.rm = TRUE)
-  ) 
-accel_total 
+  )
 
-# accel_total %>% 
-#   ggplot(aes(x = day_id, y = total )) +
-#   geom_line() +
-#   scale_x_continuous(breaks = seq(0, 35, 2))
+knitr::kable(accel_total)
 
-  
+accel_total %>%
+  ggplot(aes(x = day_id, y = total )) +
+  geom_line() +
+  scale_x_continuous(breaks = seq(0, 35, 2))
+
 ```
 
 The activity counts have upper and lower fluctuation. Decreasing always occurs after increasing on last day. And the activity counts dramaticly decrease on day 24 and 31, both are Saturday.
@@ -300,19 +303,25 @@ The activity counts have upper and lower fluctuation. Decreasing always occurs a
 ### c) Accelerometer data allows the inspection activity over the course of the day. Make a single-panel plot that shows the 24-hour activity time courses for each day and use color to indicate day of the week. Describe in words any patterns or conclusions you can make based on this graph.
 
 ```{r}
-accel %>% 
+day_week = 
+  accel %>% 
   group_by(day_id,day) %>% 
   summarize(
     eachday = sum(counts,na.rm = TRUE)
-  ) %>%
-  ggplot(aes(x = day_id, y = eachday, color = day)) +
-  geom_line(size = 1.5) +
+  ) 
+knitr::kable(day_week)
+day_week %>%   
+  ggplot(aes(x = day_id, y = eachday)) +
+  # geom_bar(aes(fill = day),stat = "identity", position = "dodge") +
+  geom_line(aes(color = day),size = 1) +
+  geom_point(size = 2, alpha = 0.5) +
   scale_x_continuous(breaks = seq(0, 35, 5)) +
   labs(
     x = "activity for each day",
     y = "day id",
     title = "The 24-hour Activity Time Courses for Each Day"
   )
+
 ```
 
 For first 10 days, the activity counts are increasing except Sunday.
