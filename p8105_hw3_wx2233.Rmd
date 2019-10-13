@@ -9,6 +9,7 @@ output: github_document
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(p8105.datasets)
+library(skimr)
 
 knitr::opts_chunk$set(
 	echo = TRUE,
@@ -96,8 +97,11 @@ bake = instacart %>%
   summarize(
     count = n()
   ) %>%
-  arrange(desc(count)) 
-bake = bake[1:3,]
+  arrange(desc(count)) %>% 
+  mutate(
+    rank = c(1:length(count))
+  ) %>% 
+  filter(rank %in% c(1,2,3))
 
 dog = instacart %>% 
   filter(aisle == c("dog food care")) %>% 
@@ -105,8 +109,11 @@ dog = instacart %>%
   summarize(
     count = n()
   ) %>%
-  arrange(desc(count)) 
-dog = dog[1:3,]
+  arrange(desc(count)) %>% 
+  mutate(
+    rank = c(1:length(count))
+  ) %>% 
+  filter(rank %in% c(1,2,3))
 
 veg_fruit = instacart %>% 
   filter(aisle == c("packaged vegetables fruits")) %>% 
@@ -114,8 +121,11 @@ veg_fruit = instacart %>%
   summarize(
     count = n()
   ) %>%
-  arrange(desc(count)) 
-veg_fruit = veg_fruit[1:3,]
+  arrange(desc(count)) %>% 
+    mutate(
+    rank = c(1:length(count))
+  ) %>% 
+  filter(rank %in% c(1,2,3))
 
 bind_rows(bake,dog,veg_fruit) %>% 
   knitr::kable()
@@ -163,27 +173,28 @@ brfss = brfss %>%
   rename(state = locationabbr)
 
 brfss
+
+
+
+
+brfss_2 = brfss %>% 
+  janitor::clean_names() %>% 
+  filter(topic == "Overall Health", response ==  c("Excellent","Very good","Good","Fair","Poor"))
 ```
 
 ### a) In 2002, which states were observed at 7 or more locations? What about in 2010?
 ```{r}
+
 brfss %>% 
-  filter(year == 2002) %>% 
-  group_by(state) %>% 
+  filter(year == 2002 | year == 2010) %>% 
+  group_by(year, state) %>% 
   distinct(locationdesc) %>% 
   summarize(
     count = n()
   ) %>% 
   filter(count >= 7)
 
-brfss %>% 
-  filter(year == 2010) %>% 
-  group_by(state) %>% 
-  distinct(locationdesc) %>% 
-  summarize(
-    count = n()
-  ) %>% 
-  filter(count >= 7)
+
 ```
 
 2002: CT,FL,MA,NC,NJ,PA    
@@ -241,6 +252,22 @@ ggplot(aes(x = response, y = data_value,fill = locationdesc)) +
   ) +
   facet_grid(. ~ year)
 ```
+
+```{r}
+NY_data_value %>% 
+ggplot(aes(x = locationdesc, y = data_value,fill = response)) +
+  geom_line(aes(group = response, color = response),size = 1.5) +
+  labs(
+    title = " Data value of NY"
+  ) +
+  facet_grid(. ~ year) +
+  theme(
+    axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+    legend.position = "right")
+ 
+```
+
+
 Only 6 counties' data are collected in 2006 while 9 counties in 2010. And the Good and Very good response are most common in both two years.
 
 ## Problem 3
@@ -282,46 +309,63 @@ THe data has 50400 obs. of 6 variables:
 ### b) Traditional analyses of accelerometer data focus on the total activity over the day. Using your tidied dataset, aggregate accross minutes to create a total activity variable for each day, and create a table showing these totals. Are any trends apparent?
 
 ```{r}
-accel_total = accel %>% 
-  group_by(day_id) %>% 
+
+accel_new =
+accel %>% 
+  mutate(
+    Week_day = recode(day,
+                     "Monday" = "1",
+                     "Tuesday" = "2",
+                     "Wednesday" = "3",
+                     "Thursday" = "4",
+                     "Friday" = "5",
+                     "Saturday" = "6",
+                     "Sunday" = "7")
+  ) %>% 
+  arrange(week,Week_day) %>%
+  mutate(
+    Index = rep(c(1:35),each = 1440)  #add day_id (1:35)
+  )
+
+eachday_total = accel_new %>% 
+  group_by(week, Week_day, day,Index) %>% 
   summarize(
     total = sum(counts,na.rm = TRUE)
   )
 
-knitr::kable(accel_total)
+knitr::kable(eachday_total)
 
-accel_total %>%
-  ggplot(aes(x = day_id, y = total )) +
+eachday_total %>% 
+  ggplot(aes(x = Index, y = total )) +
   geom_line() +
   scale_x_continuous(breaks = seq(0, 35, 2))
-
 ```
 
-The activity counts have upper and lower fluctuation. Decreasing always occurs after increasing on last day. And the activity counts dramaticly decrease on day 24 and 31, both are Saturday.
+The activity counts have upper and lower fluctuation. Decreasing always occurs after increasing on last day. And the activity counts dramaticly decrease on day 27 and 34, both are Saturday. 
 
 
 ### c) Accelerometer data allows the inspection activity over the course of the day. Make a single-panel plot that shows the 24-hour activity time courses for each day and use color to indicate day of the week. Describe in words any patterns or conclusions you can make based on this graph.
 
+
 ```{r}
-day_week = 
-  accel %>% 
-  group_by(day_id,day) %>% 
-  summarize(
-    eachday = sum(counts,na.rm = TRUE)
-  ) 
-knitr::kable(day_week)
-day_week %>%   
-  ggplot(aes(x = day_id, y = eachday)) +
-  # geom_bar(aes(fill = day),stat = "identity", position = "dodge") +
-  geom_line(aes(color = day),size = 1) +
-  geom_point(size = 2, alpha = 0.5) +
-  scale_x_continuous(breaks = seq(0, 35, 5)) +
-  labs(
-    x = "activity for each day",
-    y = "day id",
-    title = "The 24-hour Activity Time Courses for Each Day"
+eachday =
+accel_new %>% 
+  mutate(
+    act_min = as.numeric(activity_minute) + 
+      1440 * (Index - 1),
+    day = factor(day,
+                 levels = c("Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"))
   )
 
+eachday %>% 
+  ggplot() +
+  geom_linerange(aes(x = act_min, ymax = counts, ymin = 0, color = day)) +
+  scale_x_continuous(breaks = seq(0,28*1440,1440*7),label = c(1:5)) +
+  labs(
+    y = "activity for each day",
+    x = "week",
+    title = "The 24-hour Activity Time Courses for Each Day"
+  )
 ```
 
 For first 10 days, the activity counts are increasing except Sunday.
