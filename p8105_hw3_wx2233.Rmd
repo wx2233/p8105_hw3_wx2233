@@ -56,9 +56,9 @@ The data has 1384617 obs. of  15 variables:
 * add_to_cart_order: order in which each product was added to cart
 * reordered: whether this product has been ordered by this user in the past(1 = yes, 0 = no)
 
-
-Example of obs:
-The product name is Bulgarian Yogurt, it belongs to yogurt aisle(id = 120) and dairy eggs department(id = 16), days since prior order is 9, the hour of the day the order was placed on is 10, the day of the week the order was placed on is Thusday, the order sequence number is 4. And the evaluation set is train. The user id is 112108.
+  
+Example of obs in first row:     
+The product name is Bulgarian Yogurt, it belongs to yogurt aisle(id = 120) and dairy eggs department(id = 16).The days since prior order is 9 and the hour of the day the order was placed on is 10. The day of the week the order was placed on is Thusday and the order sequence number is 4. And the evaluation set is train. The user id is 112108.
 ```{r}
 instacart[1,]
 ```
@@ -231,7 +231,7 @@ ext_avg_data_value %>%
 
 ```
 
-The average data value fluctuates by years for each state.
+The average data value fluctuates by years for each state, around 15 to 25.
 
 
 ### c) 
@@ -339,6 +339,7 @@ accel_new %>%
   )
   
 ```
+
 We can find that the activity counts during the morning 7am - 9 am and during the evening around 7pm - 9pm are higher. The activity counts are lower during midnight and early morning. But I cannot disguish each day clealy, so I draw another plot to gain more information.
 
 ```{r}
@@ -359,5 +360,5 @@ eachday %>%
   )
 ```
 
-We can find that the activity counts are increasing except Sunday.
-Then the activity counts decrease from day 11 to around day 25. For Saturday in last two weeks, both activity counts of the day decrease to 1440.
+The activity counts are low on from Monday to Thursday of the first week.
+Then the activity counts fluctuates for each day, with around 2 peaks for morning and evening. And for Saturday in last two weeks, both activity counts of the day dramatically decrease to 1440.
