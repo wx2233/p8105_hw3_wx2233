@@ -58,7 +58,7 @@ The data has 1384617 obs. of  15 variables:
 
 
 Example of obs:
-The product name is Bulgarian Yogurt, it belongs to yogurt aisle(id = 120) and dairy eggs department(id = 16), days since prior order is 9, the hour of the day the order was placed on is 10, the day of the week the order was placed on is Thusday, the order sequence number is 4.
+The product name is Bulgarian Yogurt, it belongs to yogurt aisle(id = 120) and dairy eggs department(id = 16), days since prior order is 9, the hour of the day the order was placed on is 10, the day of the week the order was placed on is Thusday, the order sequence number is 4. And the evaluation set is train. The user id is 112108.
 ```{r}
 instacart[1,]
 ```
