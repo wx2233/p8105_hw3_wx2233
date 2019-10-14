@@ -235,8 +235,6 @@ The average data value fluctuates by years for each state.
 
 
 ### c) 
-We can draw the plot from 2 prospective.
-First plot : for different response, the group is location. 
 ```{r}
 NY_data_value = brfss %>%
   filter(year == 2006 | year == 2010,state == "NY") %>%
@@ -251,26 +249,6 @@ ggplot(aes(x = response, y = data_value,fill = locationdesc)) +
     title = " Data value of NY"
   ) +
   facet_grid(. ~ year)
-```
-
-Second plot: for different locations, group is response. We can clearly see the change of response among different locations.
-```{r}
-NY_data_value = brfss %>% 
-filter(year == 2006 | year == 2010,state == "NY") %>% 
-select(year,state,locationdesc,response,data_value)  
-NY_data_value
-
-NY_data_value %>% 
-ggplot(aes(x = locationdesc, y = data_value,fill = response)) +
-  geom_line(aes(group = response, color = response),size = 1.5) +
-  geom_point(size = 2, alpha = 0.5) +
-  labs(
-    title = " Data value distribution of NY"
-  ) +
-  facet_grid(. ~ year) +
-  theme(
-    axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
-    legend.position = "right")
 ```
 
 Only 6 counties' data are collected in 2006 while 9 counties in 2010. And the Good and Very good response are most common in both two years.
@@ -320,29 +298,18 @@ The data has 50400 obs. of 6 variables:
 ```{r}
 accel_new =
 accel %>% 
-  mutate(
-    week_day = recode(day,
-                     "Monday" = "1",
-                     "Tuesday" = "2",
-                     "Wednesday" = "3",
-                     "Thursday" = "4",
-                     "Friday" = "5",
-                     "Saturday" = "6",
-                     "Sunday" = "7")
-  ) %>% 
-  arrange(week,week_day) %>%
+  arrange(week,day) %>%
   mutate(
     day_index = rep(c(1:35),each = 1440)  #add new day_id 1:35
   ) %>% 
-  select(week,week_day,day,day_index,everything())
-```
+  select(week,day,day_index,everything())
 
-```{r}
 eachday_total = accel_new %>% 
-  group_by(week, week_day, day,day_index) %>% 
+  group_by(week, day,day_index) %>% 
   summarize(
     total = sum(counts,na.rm = TRUE)
-  )
+  ) %>% 
+  select(day_index,everything())
 
 knitr::kable(eachday_total)
 ```
