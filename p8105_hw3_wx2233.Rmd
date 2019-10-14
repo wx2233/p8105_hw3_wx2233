@@ -347,7 +347,7 @@ eachday_total = accel_new %>%
 knitr::kable(eachday_total)
 ```
 
-From the table I cannot see the trends clearly so I draw a plot.
+From the table I cannot see the trends clearly so I draw a plot for 35 days.
 ```{r}
 eachday_total %>% 
   ggplot(aes(x = day_index, y = total )) +
