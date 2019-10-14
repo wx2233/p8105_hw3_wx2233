@@ -272,7 +272,7 @@ Only 6 counties' data are collected in 2006 while 9 counties in 2010. And the Go
 
 ## Problem 3
 
-### a) Load, tidy, and otherwise wrangle the data. Your final dataset should include all originally observed variables and values; have useful variable names; include a weekday vs weekend variable; and encode data with reasonable variable classes. Describe the resulting dataset (e.g. what variables exist, how many observations, etc).
+### a) 
 ```{r}
 accel = read_csv("./data/accel_data.csv") %>% 
   janitor::clean_names() %>% 
@@ -311,8 +311,7 @@ The data has 50400 obs. of 6 variables:
 * activity_minute: the minute of a 24-hour day
 * count: the activity counts for each minute of a 24-hour day starting at midnight.
 
-### b) Traditional analyses of accelerometer data focus on the total activity over the day. Using your tidied dataset, aggregate accross minutes to create a total activity variable for each day, and create a table showing these totals. Are any trends apparent?
-
+### b) 
 ```{r}
 accel_new =
 accel %>% 
@@ -354,7 +353,7 @@ eachday_total %>%
 The activity counts have upper and lower fluctuation. Decreasing always occurs after increasing of the day before. And the activity counts dramaticly decrease on day 27 and 34, both are Saturday. 
 
 
-### c) Accelerometer data allows the inspection activity over the course of the day. Make a single-panel plot that shows the 24-hour activity time courses for each day and use color to indicate day of the week. Describe in words any patterns or conclusions you can make based on this graph.
+### c) 
 
 ```{r}
 accel_new %>%
