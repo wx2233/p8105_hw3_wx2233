@@ -42,7 +42,7 @@ The data has 1384617 obs. of  15 variables:
 
 * order_id: the id of order 
 * user_id: the id of customer 
-* eval_set: which evaluation set this order belongs in (see SET described below)
+* eval_set: which evaluation set this order belongs in
 * order_number: the order sequence number for this user (1 = first, n = nth)
 * order_dow: the day of the week the order was placed on
 * order_hour_of_day: the hour of the day the order was placed on
@@ -55,6 +55,19 @@ The data has 1384617 obs. of  15 variables:
 * department: the name of the department
 * add_to_cart_order: order in which each product was added to cart
 * reordered: whether this product has been ordered by this user in the past(1 = yes, 0 = no)
+
+
+Example of obs:
+The product name is Bulgarian Yogurt, it belongs to yogurt aisle(id = 120) and dairy eggs department(id = 16), days since prior order is 9, the hour of the day the order was placed on is 10, the day of the week the order was placed on is Thusday, the order sequence number is 4.
+```{r}
+instacart[1,]
+```
+
+
+Structure: each row is an observation, each column is a variable.
+```{r}
+str(instacart)
+```
 
 
 
@@ -126,21 +139,25 @@ The most popular item of baking ingredients	is Light Brown Sugar, which has boug
 
 ```{r}
 instacart %>% 
-  filter(product_name %in% c("Pink Lady Apple", "Coffee Ice Cream")) %>%
+  filter(product_name %in% c("Pink Lady Apples","Coffee Ice Cream")) %>%
+  mutate(
+    order_dow = factor(order_dow, labels  = 
+                             c("Sunday","Monday","Tuesday","Wednesday",
+                              "Thursday","Friday","Saturday"))
+    ) %>% 
   group_by(product_name,order_dow) %>% 
   summarize(
-    mean_hour = mean(order_hour_of_day)
+    mean_hour = round(mean(order_hour_of_day),2)
   ) %>% 
   pivot_wider(
     names_from = order_dow,
     values_from = mean_hour
-  ) %>% 
+  ) %>%
   knitr::kable()
-
 
 ```
 
-From this table we find that the pink lady apple has least orders on Wednesday and most orders on Friday. Coffee Ice Cream has least orders on Friday but most on Tuesday. 
+From this table we find that the pink lady apple has least orders on Monday and most orders on Wednesday. Coffee Ice Cream has least orders on Friday but most on Tuesday. 
 
 
 
@@ -221,22 +238,25 @@ The average data value fluctuates by years for each state.
 
 ### c) Make a two-panel plot showing, for the years 2006, and 2010, distribution of data_value for responses (“Poor” to “Excellent”) among locations in NY State.
 
+We can draw the plot from 2 prospective.
+First plot : for different response, the group is location. 
 ```{r}
-# NY_data_value = brfss %>% 
-#   filter(year == 2006 | year == 2010,state == "NY") %>% 
-#   select(year,state,locationdesc,response,data_value)
-# 
-# NY_data_value %>% 
-# ggplot(aes(x = response, y = data_value,fill = locationdesc)) +
-#   geom_bar(stat = "identity", position = "dodge") +
-#   geom_line(aes(group = locationdesc, color = locationdesc)) +
-#   geom_point(size = 1.5, alpha = 0.5) +
-#   labs(
-#     title = " Data value of NY"
-#   ) +
-#   facet_grid(. ~ year)
+NY_data_value = brfss %>%
+  filter(year == 2006 | year == 2010,state == "NY") %>%
+  select(year,state,locationdesc,response,data_value)
+
+NY_data_value %>%
+ggplot(aes(x = response, y = data_value,fill = locationdesc)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  geom_line(aes(group = locationdesc, color = locationdesc)) +
+  geom_point(size = 1.5, alpha = 0.5) +
+  labs(
+    title = " Data value of NY"
+  ) +
+  facet_grid(. ~ year)
 ```
 
+Second plot: for different locations, group is response. We can clearly see the change of response among different locations.
 ```{r}
 NY_data_value = brfss %>% 
 filter(year == 2006 | year == 2010,state == "NY") %>% 
@@ -254,7 +274,6 @@ ggplot(aes(x = locationdesc, y = data_value,fill = response)) +
   theme(
     axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
     legend.position = "right")
- 
 ```
 
 Only 6 counties' data are collected in 2006 while 9 counties in 2010. And the Good and Very good response are most common in both two years.
@@ -356,7 +375,7 @@ accel_new %>%
   )
   
 ```
-We can find that the activity counts during the morning 7am - 9 am and during the evening around 7pm - 9pm are higher. The activity counts are lower during midnight and early morning. But I cannot distinct each day clealy, so I draw another plot to gain more information.
+We can find that the activity counts during the morning 7am - 9 am and during the evening around 7pm - 9pm are higher. The activity counts are lower during midnight and early morning. But I cannot disguish each day clealy, so I draw another plot to gain more information.
 
 ```{r}
 eachday =
