@@ -226,33 +226,40 @@ ext_avg_data_value %>%
 
 
 ```
+
 The average data value fluctuates by years for each state.
 
 
 ### c) Make a two-panel plot showing, for the years 2006, and 2010, distribution of data_value for responses (“Poor” to “Excellent”) among locations in NY State.
 
 ```{r}
-NY_data_value = brfss %>% 
-  filter(year == 2006 | year == 2010,state == "NY") %>% 
-  select(year,state,locationdesc,response,data_value)
-
-NY_data_value %>% 
-ggplot(aes(x = response, y = data_value,fill = locationdesc)) +
-  geom_bar(stat = "identity", position = "dodge") +
-  geom_line(aes(group = locationdesc, color = locationdesc)) +
-  geom_point(size = 1.5, alpha = 0.5)+
-  labs(
-    title = " Data value of NY"
-  ) +
-  facet_grid(. ~ year)
+# NY_data_value = brfss %>% 
+#   filter(year == 2006 | year == 2010,state == "NY") %>% 
+#   select(year,state,locationdesc,response,data_value)
+# 
+# NY_data_value %>% 
+# ggplot(aes(x = response, y = data_value,fill = locationdesc)) +
+#   geom_bar(stat = "identity", position = "dodge") +
+#   geom_line(aes(group = locationdesc, color = locationdesc)) +
+#   geom_point(size = 1.5, alpha = 0.5) +
+#   labs(
+#     title = " Data value of NY"
+#   ) +
+#   facet_grid(. ~ year)
 ```
 
 ```{r}
+NY_data_value = brfss %>% 
+filter(year == 2006 | year == 2010,state == "NY") %>% 
+select(year,state,locationdesc,response,data_value)  
+NY_data_value
+
 NY_data_value %>% 
 ggplot(aes(x = locationdesc, y = data_value,fill = response)) +
   geom_line(aes(group = response, color = response),size = 1.5) +
+  geom_point(size = 2, alpha = 0.5) +
   labs(
-    title = " Data value of NY"
+    title = " Data value distribution of NY"
   ) +
   facet_grid(. ~ year) +
   theme(
@@ -260,7 +267,6 @@ ggplot(aes(x = locationdesc, y = data_value,fill = response)) +
     legend.position = "right")
  
 ```
-
 
 Only 6 counties' data are collected in 2006 while 9 counties in 2010. And the Good and Very good response are most common in both two years.
 
@@ -289,24 +295,25 @@ accel = read_csv("./data/accel_data.csv") %>%
     names_to = "activity_minute", 
     names_prefix = "activity_",
     values_to = "counts") %>% 
-  arrange(day_id)
+  mutate(
+    activity_minute = as.numeric(activity_minute)
+  )
 
 accel
 ```
 
-THe data has 50400 obs. of 6 variables:
+The data has 50400 obs. of 6 variables:
 
 * week: which week
 * weekday_weekend: whether weekday or weekend
-* day_id: id of the day (id = 1~35)
-* day: which day of a week
-* activity_minute: the minute of 24-hour day
+* day_id: id of the day
+* day: factor variable shows which day of a week
+* activity_minute: the minute of a 24-hour day
 * count: the activity counts for each minute of a 24-hour day starting at midnight.
 
 ### b) Traditional analyses of accelerometer data focus on the total activity over the day. Using your tidied dataset, aggregate accross minutes to create a total activity variable for each day, and create a table showing these totals. Are any trends apparent?
 
 ```{r}
-
 accel_new =
 accel %>% 
   mutate(
@@ -324,7 +331,9 @@ accel %>%
     day_index = rep(c(1:35),each = 1440)  #add new day_id 1:35
   ) %>% 
   select(week,week_day,day,day_index,everything())
+```
 
+```{r}
 eachday_total = accel_new %>% 
   group_by(week, week_day, day,day_index) %>% 
   summarize(
@@ -332,37 +341,40 @@ eachday_total = accel_new %>%
   )
 
 knitr::kable(eachday_total)
+```
 
+From the table I cannot see the trends clearly so I draw a plot.
+```{r}
 eachday_total %>% 
   ggplot(aes(x = day_index, y = total )) +
   geom_line() +
   scale_x_continuous(breaks = seq(0, 35, 2))
 ```
 
-The activity counts have upper and lower fluctuation. Decreasing always occurs after increasing on last day. And the activity counts dramaticly decrease on day 27 and 34, both are Saturday. 
+The activity counts have upper and lower fluctuation. Decreasing always occurs after increasing of the day before. And the activity counts dramaticly decrease on day 27 and 34, both are Saturday. 
 
 
 ### c) Accelerometer data allows the inspection activity over the course of the day. Make a single-panel plot that shows the 24-hour activity time courses for each day and use color to indicate day of the week. Describe in words any patterns or conclusions you can make based on this graph.
-
 
 ```{r}
 accel_new %>%
   ggplot(aes(x = activity_minute, y = counts, color = day)) +
   geom_line(stat = "identity") +
+  scale_x_continuous(breaks = seq(0,1440,60),label = c(0:24)) +
   labs(
     y = "activity for each day",
-    x = "day",
+    x = "24 hours",
     title = "The 24-hour Activity Time Courses for Each Day"
   )
   
 ```
-I cannot clearly din
+We can find that the activity counts during the morning 7am - 9 am and during the evening around 7pm - 9pm are higher. The activity counts are lower during midnight and early morning. But I cannot distinct each day clealy, so I draw another plot to gain more information.
 
 ```{r}
 eachday =
 accel_new %>% 
   mutate(
-    act_min = as.numeric(activity_minute) + 
+    act_min = activity_minute + 
       1440 * (day_index - 1))
 
 eachday %>% 
@@ -376,7 +388,5 @@ eachday %>%
   )
 ```
 
-
-
-For first 10 days, the activity counts are increasing except Sunday.
+We can find that the activity counts are increasing except Sunday.
 Then the activity counts decrease from day 11 to around day 25. For Saturday in last two weeks, both activity counts of the day decrease to 1440.
