@@ -231,7 +231,7 @@ ext_avg_data_value %>%
 
 ```
 
-The average data value fluctuates by years for each state, around 15 to 25.
+The average data value fluctuates by years for each state. And the average values are different among each state.
 
 
 ### c) 
@@ -240,6 +240,17 @@ NY_data_value = brfss %>%
   filter(year == 2006 | year == 2010,state == "NY") %>%
   select(year,state,locationdesc,response,data_value)
 
+
+#boxplot: distribtion among locations. 
+NY_data_value %>%
+ggplot(aes(x = response, y = data_value)) +
+  geom_boxplot() +
+  labs(
+    title = " Data value of NY"
+  ) +
+  facet_grid(. ~ year) 
+
+#bar plot: to see the difference of each locationdesc
 NY_data_value %>%
 ggplot(aes(x = response, y = data_value,fill = locationdesc)) +
   geom_bar(stat = "identity", position = "dodge") +
@@ -251,7 +262,7 @@ ggplot(aes(x = response, y = data_value,fill = locationdesc)) +
   facet_grid(. ~ year)
 ```
 
-Only 6 counties' data are collected in 2006 while 9 counties in 2010. And the Good and Very good response are most common in both two years.
+We can see that Only 6 counties' data are collected in 2006 while 9 counties in 2010. The data value of "Poor" response is lowest in both two years and the "Good" and "Very good" response are higher in both two years. 
 
 ## Problem 3
 
